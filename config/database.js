@@ -2,7 +2,7 @@ const loki = require('lokijs');
 const path = require('path');
 require('dotenv').config();
 
-const DB_FILE = process.env.DB_FILE || path.join(__dirname, '..', 'data', 'mango_optimize.db');
+const DB_FILE = process.env.NODE_ENV === 'production' ? null : process.env.DB_FILE || path.join(__dirname, '..', 'data', 'mango_optimize.db');
 
 const db = new loki(DB_FILE, {
     autoload: true,
