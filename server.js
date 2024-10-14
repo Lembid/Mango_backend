@@ -2,42 +2,33 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const { initializeDB } = require('./config/database');
+const { initializeDatabase } = require('./config/database');
+const adminRoutes = require('./routes/admin');
+const apiRoutes = require('./routes/api');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-const PORT = process.env.PORT || 5000;
-
-const apiRoutes = require('./routes/api');
+app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 
-// Add this new route
 app.get('/', (req, res) => {
-  res.send('Welcome to OptimizeTax API');
+  res.redirect('/admin');
 });
 
-const adminRoutes = require('./routes/admin');
-app.use('/admin', adminRoutes);
-
-app.set('view engine', 'ejs');
-
-initializeDB().catch(console.error);
-
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+initializeDatabase()
   .then(() => {
-    console.log('Connected to MongoDB');
-    // Load models after successful connection
-    require('./models/Individual');
-    require('./models/Business');
-    require('./models/PlaceOrder');
+    console.log('Database initialized');
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
   })
-  .catch(err => console.error('Could not connect to MongoDB', err));
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+  .catch(err => {
+    console.error('Could not initialize database:', err);
+    process.exit(1);
+  });

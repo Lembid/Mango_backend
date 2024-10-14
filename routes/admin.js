@@ -1,48 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const Individual = require('../models/Individual');
-const Business = require('../models/Business');
-const PlaceOrder = require('../models/PlaceOrder');
+const db = require('../config/database');
 
-// Admin dashboard
 router.get('/', (req, res) => {
-  res.render('admin/dashboard');
+  res.render('admin/dashboard', { path: '/admin' });
 });
 
-// Individual CRUD
-router.get('/individual', async (req, res) => {
-  const data = await Individual.findOne();
-  res.render('admin/individual', { data });
-});
+['individual', 'business', 'place-order'].forEach(route => {
+  router.get(`/${route}`, async (req, res) => {
+    let data = await db[`get${route.charAt(0).toUpperCase() + route.slice(1).replace('-', '')}DB`]();
+    if (!data) {
+      data = {};
+    }
+    if (!data.cards || !Array.isArray(data.cards) || data.cards.length < 3) {
+      data.cards = [
+        { title: '', description: '' },
+        { title: '', description: '' },
+        { title: '', description: '' }
+      ];
+    }
+    res.render(`admin/${route}`, { data, path: `/admin/${route}` });
+  });
 
-router.post('/individual', async (req, res) => {
-  const formData = processFormData(req.body);
-  await Individual.findOneAndUpdate({}, formData, { upsert: true, new: true });
-  res.redirect('/admin/individual');
-});
-
-// Business CRUD
-router.get('/business', async (req, res) => {
-  const data = await Business.findOne();
-  res.render('admin/business', { data });
-});
-
-router.post('/business', async (req, res) => {
-  const formData = processFormData(req.body);
-  await Business.findOneAndUpdate({}, formData, { upsert: true, new: true });
-  res.redirect('/admin/business');
-});
-
-// PlaceOrder CRUD
-router.get('/place-order', async (req, res) => {
-  const data = await PlaceOrder.findOne();
-  res.render('admin/place-order', { data });
-});
-
-router.post('/place-order', async (req, res) => {
-  const formData = processFormData(req.body);
-  await PlaceOrder.findOneAndUpdate({}, formData, { upsert: true, new: true });
-  res.redirect('/admin/place-order');
+  router.post(`/${route}`, async (req, res) => {
+    const formData = processFormData(req.body);
+    await db[`update${route.charAt(0).toUpperCase() + route.slice(1).replace('-', '')}DB`](formData);
+    res.redirect(`/admin/${route}`);
+  });
 });
 
 function processFormData(body) {

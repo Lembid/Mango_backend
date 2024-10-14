@@ -1,109 +1,83 @@
-const mongoose = require('mongoose');
-const fs = require('fs').promises;
+const loki = require('lokijs');
 const path = require('path');
 require('dotenv').config();
 
-const DATABASE_FILE = process.env.DATABASE_FILE || path.join(__dirname, 'database.json');
+const DB_FILE = process.env.DB_FILE || path.join(__dirname, '..', 'data', 'mango_optimize.db');
+
+const db = new loki(DB_FILE, {
+    autoload: true,
+    autoloadCallback: initializeDatabase,
+    autosave: true,
+    autosaveInterval: 4000
+});
+
+function initializeDatabase() {
+    return new Promise((resolve, reject) => {
+        ['individual', 'business', 'placeOrder'].forEach(collectionName => {
+            let collection = db.getCollection(collectionName);
+            if (collection === null) {
+                collection = db.addCollection(collectionName);
+                if (collection.count() === 0) {
+                    collection.insert(defaultData[collectionName][0]);
+                }
+            }
+        });
+        resolve();
+    });
+}
 
 const defaultData = {
-  individual: [{
-    id: 1,
-    mainTitlePart1: "Personal Tax Preparation",
-    mainTitlePart2: "for Everyone",
-    subHeading: "Optimize your taxes with us",
-    cards: [
-      { title: "Card 1", description: "Description 1" },
-      { title: "Card 2", description: "Description 2" },
-      { title: "Card 3", description: "Description 3" }
-    ],
-    leftSection: { heading: "Select options", checkboxPoints: [] },
-    rightSection: { title: "Pricing", basePrice: "100", allPlansInclude: [] }
-  }],
-  business: [{
-    id: 1,
-    mainTitlePart1: "Business Tax Preparation",
-    mainTitlePart2: "for All Sizes",
-    subHeading: "Optimize your business taxes",
-    cards: [
-      { title: "Card 1", description: "Description 1" },
-      { title: "Card 2", description: "Description 2" },
-      { title: "Card 3", description: "Description 3" }
-    ],
-    leftSection: {
-      heading: "Select business options",
-      checkboxPoints: []
-    },
-    rightSection: {
-      title: "Business Pricing",
-      basePrice: "500",
-      allPlansInclude: []
-    }
-  }],
-  placeOrder: [{
-    id: 1,
-    mainTitle: "Place Your Order",
-    subHeading: "Easy and quick ordering process",
-    cards: [
-      { title: "Card 1", description: "Description 1" },
-      { title: "Card 2", description: "Description 2" },
-      { title: "Card 3", description: "Description 3" }
-    ],
-    orderOptions: [],
-    pricingDetails: {
-      basePrice: "100",
-      additionalServices: []
-    }
-  }]
+    individual: [{
+        mainTitlePart1: 'Default Individual Title Part 1',
+        mainTitlePart2: 'Default Individual Title Part 2',
+        subHeading: 'Default Individual Subheading',
+        cards: [
+            { title: 'Card 1 Title', description: 'Card 1 Description' },
+            { title: 'Card 2 Title', description: 'Card 2 Description' },
+            { title: 'Card 3 Title', description: 'Card 3 Description' }
+        ]
+    }],
+    business: [{
+        mainTitlePart1: 'Default Business Title Part 1',
+        mainTitlePart2: 'Default Business Title Part 2',
+        subHeading: 'Default Business Subheading',
+        cards: [
+            { title: 'Card 1 Title', description: 'Card 1 Description' },
+            { title: 'Card 2 Title', description: 'Card 2 Description' },
+            { title: 'Card 3 Title', description: 'Card 3 Description' }
+        ],
+        leftSection: { heading: 'Default Left Section Heading' },
+        rightSection: { title: 'Default Right Section Title', basePrice: '0' }
+    }],
+    placeOrder: [{
+        mainTitle: 'Default Place Order Title',
+        subHeading: 'Default Place Order Subheading',
+        cards: [
+            { title: 'Card 1 Title', description: 'Card 1 Description' },
+            { title: 'Card 2 Title', description: 'Card 2 Description' },
+            { title: 'Card 3 Title', description: 'Card 3 Description' }
+        ],
+        pricingDetails: { basePrice: '0' }
+    }]
 };
-
-const initializeDB = async () => {
-  try {
-    const mongoURI = process.env.MONGODB_URI.replace('mongodb+srv://', 'mongodb://');
-    await mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('Connected to MongoDB');
-    await loadDatabase();
-  } catch (error) {
-    console.error('Could not connect to MongoDB:', error.message);
-  }
-};
-
-async function loadDatabase() {
-  try {
-    const data = await fs.readFile(DATABASE_FILE, 'utf8');
-    const parsedData = JSON.parse(data);
-    await Promise.all([
-      mongoose.model('Individual').create(parsedData.individual),
-      mongoose.model('Business').create(parsedData.business),
-      mongoose.model('PlaceOrder').create(parsedData.placeOrder)
-    ]);
-  } catch (error) {
-    console.log('No existing database found, initializing with default data');
-    await Promise.all([
-      mongoose.model('Individual').create(defaultData.individual),
-      mongoose.model('Business').create(defaultData.business),
-      mongoose.model('PlaceOrder').create(defaultData.placeOrder)
-    ]);
-  }
-}
-
-async function saveDatabase() {
-  const data = {
-    individual: await mongoose.model('Individual').find(),
-    business: await mongoose.model('Business').find(),
-    placeOrder: await mongoose.model('PlaceOrder').find()
-  };
-  await fs.writeFile(DATABASE_FILE, JSON.stringify(data, null, 2));
-}
-
-setInterval(saveDatabase, 5 * 60 * 1000); // Save every 5 minutes
 
 module.exports = {
-  initializeDB,
-  saveDatabase,
-  getIndividualDB: () => mongoose.model('Individual').findOne(),
-  getBusinessDB: () => mongoose.model('Business').findOne(),
-  getPlaceOrderDB: () => mongoose.model('PlaceOrder').findOne(),
-  updateIndividualDB: (data) => mongoose.model('Individual').findOneAndUpdate({}, data, { new: true }),
-  updateBusinessDB: (data) => mongoose.model('Business').findOneAndUpdate({}, data, { new: true }),
-  updatePlaceOrderDB: (data) => mongoose.model('PlaceOrder').findOneAndUpdate({}, data, { new: true })
+    initializeDatabase: () => initializeDatabase(),
+    getIndividualDB: () => db.getCollection('individual').findOne({}),
+    getBusinessDB: () => db.getCollection('business').findOne({}),
+    getPlaceOrderDB: () => db.getCollection('placeOrder').findOne({}),
+    updateIndividualDB: (data) => updateCollection('individual', data),
+    updateBusinessDB: (data) => updateCollection('business', data),
+    updatePlaceOrderDB: (data) => updateCollection('placeOrder', data)
 };
+
+function updateCollection(collectionName, data) {
+    const collection = db.getCollection(collectionName);
+    const existing = collection.findOne({});
+    if (existing) {
+        collection.update({ ...existing, ...data });
+    } else {
+        collection.insert(data);
+    }
+    return collection.findOne({});
+}

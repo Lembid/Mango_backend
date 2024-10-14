@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+    <style>
+        .active { font-weight: bold; }
+    </style>
 </head>
 <body>
+    <%- include('../partials/navbar') %>
     <h1>Admin Dashboard</h1>
     <ul>
         <li><a href="/admin/individual">Manage Individual</a></li>
         <li><a href="/admin/business">Manage Business</a></li>
-        <li><a href="/admin/place-order">Manage Place Order</a></li>
     </ul>
 </body>
 </html>

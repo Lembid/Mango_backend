@@ -4,42 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Individual</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .active { 
+            font-weight: bold; 
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <h1>Manage Individual</h1>
-    <form action="/admin/individual" method="POST">
-        <label for="mainTitlePart1">Main Title Part 1:</label>
-        <input type="text" id="mainTitlePart1" name="mainTitlePart1" value="<%= data ? data.mainTitlePart1 : '' %>"><br><br>
-        
-        <label for="mainTitlePart2">Main Title Part 2:</label>
-        <input type="text" id="mainTitlePart2" name="mainTitlePart2" value="<%= data ? data.mainTitlePart2 : '' %>"><br><br>
-        
-        <label for="subHeading">Sub Heading:</label>
-        <input type="text" id="subHeading" name="subHeading" value="<%= data ? data.subHeading : '' %>"><br><br>
-        
-        <h2>Cards</h2>
-        <% for(let i = 0; i < 3; i++) { %>
-            <h3>Card <%= i+1 %></h3>
-            <label for="card<%= i %>Title">Title:</label>
-            <input type="text" id="card<%= i %>Title" name="cards[<%= i %>][title]" value="<%= data && data.cards[i] ? data.cards[i].title : '' %>"><br>
+    <%- include('../partials/navbar') %>
+    <div class="container">
+        <h1>Manage Individual</h1>
+        <form action="/admin/individual" method="POST">
+            <label for="mainTitlePart1">Main Title Part 1:</label>
+            <input type="text" id="mainTitlePart1" name="mainTitlePart1" value="<%= data ? data.mainTitlePart1 : '' %>">
             
-            <label for="card<%= i %>Description">Description:</label>
-            <input type="text" id="card<%= i %>Description" name="cards[<%= i %>][description]" value="<%= data && data.cards[i] ? data.cards[i].description : '' %>"><br><br>
-        <% } %>
-
-        <h2>Left Section</h2>
-        <label for="leftSectionHeading">Heading:</label>
-        <input type="text" id="leftSectionHeading" name="leftSection[heading]" value="<%= data && data.leftSection ? data.leftSection.heading : '' %>"><br><br>
-
-        <h2>Right Section</h2>
-        <label for="rightSectionTitle">Title:</label>
-        <input type="text" id="rightSectionTitle" name="rightSection[title]" value="<%= data && data.rightSection ? data.rightSection.title : '' %>"><br>
-
-        <label for="rightSectionBasePrice">Base Price:</label>
-        <input type="text" id="rightSectionBasePrice" name="rightSection[basePrice]" value="<%= data && data.rightSection ? data.rightSection.basePrice : '' %>"><br><br>
-
-        <input type="submit" value="Save">
-    </form>
-    <a href="/admin">Back to Dashboard</a>
+            <label for="mainTitlePart2">Main Title Part 2:</label>
+            <input type="text" id="mainTitlePart2" name="mainTitlePart2" value="<%= data ? data.mainTitlePart2 : '' %>">
+            
+            <label for="subHeading">Sub Heading:</label>
+            <input type="text" id="subHeading" name="subHeading" value="<%= data ? data.subHeading : '' %>">
+            
+            <h2>Cards</h2>
+            <% for(let i = 0; i < 3; i++) { %>
+                <h3>Card <%= i+1 %></h3>
+                <label for="card<%= i %>Title">Title:</label>
+                <input type="text" id="card<%= i %>Title" name="cards[<%= i %>][title]" value="<%= data && data.cards[i] ? data.cards[i].title : '' %>">
+                
+                <label for="card<%= i %>Description">Description:</label>
+                <input type="text" id="card<%= i %>Description" name="cards[<%= i %>][description]" value="<%= data && data.cards[i] ? data.cards[i].description : '' %>">
+            <% } %>
+            
+            <input type="submit" value="Save">
+        </form>
+    </div>
 </body>
 </html>
