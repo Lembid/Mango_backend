@@ -58,7 +58,8 @@ const defaultData = {
 
 const initializeDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    const mongoURI = process.env.MONGODB_URI.replace('mongodb+srv://', 'mongodb://');
+    await mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log('Connected to MongoDB');
     await loadDatabase();
   } catch (error) {
