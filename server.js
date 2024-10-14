@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const { initializeDB } = require('./config/database');
 
 const app = express();
 
@@ -24,6 +25,8 @@ const adminRoutes = require('./routes/admin');
 app.use('/admin', adminRoutes);
 
 app.set('view engine', 'ejs');
+
+initializeDB().catch(console.error);
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
