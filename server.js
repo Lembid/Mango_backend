@@ -2,75 +2,39 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const { initializeDB, saveDatabase } = require('./config/database');
-const adminRoutes = require('./routes/admin');
-const fs = require('fs').promises;
+const mongoose = require('mongoose');
+const cors = require('cors');
 
 const app = express();
-const DATABASE_FILE = process.env.DATABASE_FILE || path.join(__dirname, 'database.json');
 
-initializeDB();
-
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
 app.use(bodyParser.json());
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
 
+const PORT = process.env.PORT || 5000;
+
+const apiRoutes = require('./routes/api');
+app.use('/api', apiRoutes);
+
+// Add this new route
+app.get('/', (req, res) => {
+  res.send('Welcome to OptimizeTax API');
+});
+
+const adminRoutes = require('./routes/admin');
 app.use('/admin', adminRoutes);
 
-// API endpoint to get data
-app.get('/api/data', (req, res) => {
-  const { getIndividualDB, getBusinessDB, getPlaceOrderDB } = require('./config/database');
-  res.json({
-    individual: getIndividualDB(),
-    business: getBusinessDB(),
-    placeOrder: getPlaceOrderDB()
-  });
-});
+app.set('view engine', 'ejs');
 
-const PORT = process.env.PORT || 3000;
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('Connected to MongoDB');
+    // Load models after successful connection
+    require('./models/Individual');
+    require('./models/Business');
+    require('./models/PlaceOrder');
+  })
+  .catch(err => console.error('Could not connect to MongoDB', err));
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('Database file:', DATABASE_FILE);
 });
-
-// Save database when server is shutting down
-process.on('SIGINT', () => {
-  saveDatabase();
-  process.exit();
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  saveDatabase();
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  saveDatabase();
-  process.exit(1);
-});
-
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Kuch toh gadbad hai daya.');
-});
-
-// Initial data save (if needed)
-(async () => {
-  try {
-    await initializeDB();
-    const { getIndividualDB, getBusinessDB, getPlaceOrderDB } = require('./config/database');
-    const data = {
-      individual: getIndividualDB() || [],
-      business: getBusinessDB() || [],
-      placeOrder: getPlaceOrderDB() || []
-    };
-    await fs.writeFile(DATABASE_FILE, JSON.stringify(data, null, 2));
-    console.log('Initial data successfully saved');
-  } catch (error) {
-    console.error('Error saving initial data:', error);
-  }
-})();

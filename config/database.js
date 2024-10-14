@@ -1,10 +1,7 @@
-const taffy = require('taffydb').taffy;
+const mongoose = require('mongoose');
 const fs = require('fs').promises;
 const path = require('path');
 require('dotenv').config();
-
-let individualDB, businessDB, placeOrderDB;
-let inMemoryDB = {};
 
 const DATABASE_FILE = process.env.DATABASE_FILE || path.join(__dirname, 'database.json');
 
@@ -60,36 +57,48 @@ const defaultData = {
 };
 
 const initializeDB = async () => {
+  await mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+  console.log('Connected to MongoDB');
   await loadDatabase();
-  individualDB = taffy(inMemoryDB.individual);
-  businessDB = taffy(inMemoryDB.business);
-  placeOrderDB = taffy(inMemoryDB.placeOrder);
 };
 
 async function loadDatabase() {
   try {
     const data = await fs.readFile(DATABASE_FILE, 'utf8');
-    inMemoryDB = JSON.parse(data);
+    const parsedData = JSON.parse(data);
+    await Promise.all([
+      mongoose.model('Individual').create(parsedData.individual),
+      mongoose.model('Business').create(parsedData.business),
+      mongoose.model('PlaceOrder').create(parsedData.placeOrder)
+    ]);
   } catch (error) {
     console.log('No existing database found, initializing with default data');
-    inMemoryDB = defaultData;
+    await Promise.all([
+      mongoose.model('Individual').create(defaultData.individual),
+      mongoose.model('Business').create(defaultData.business),
+      mongoose.model('PlaceOrder').create(defaultData.placeOrder)
+    ]);
   }
 }
 
-function saveDatabase() {
-  fs.writeFileSync(DATABASE_FILE, JSON.stringify(inMemoryDB, null, 2));
+async function saveDatabase() {
+  const data = {
+    individual: await mongoose.model('Individual').find(),
+    business: await mongoose.model('Business').find(),
+    placeOrder: await mongoose.model('PlaceOrder').find()
+  };
+  await fs.writeFile(DATABASE_FILE, JSON.stringify(data, null, 2));
 }
 
-// Use setInterval to periodically save the database
 setInterval(saveDatabase, 5 * 60 * 1000); // Save every 5 minutes
 
 module.exports = {
   initializeDB,
   saveDatabase,
-  getIndividualDB: () => individualDB().first(),
-  getBusinessDB: () => businessDB().first(),
-  getPlaceOrderDB: () => placeOrderDB().first(),
-  updateIndividualDB: (data) => individualDB({ id: 1 }).update(data),
-  updateBusinessDB: (data) => businessDB({ id: 1 }).update(data),
-  updatePlaceOrderDB: (data) => placeOrderDB({ id: 1 }).update(data)
+  getIndividualDB: () => mongoose.model('Individual').findOne(),
+  getBusinessDB: () => mongoose.model('Business').findOne(),
+  getPlaceOrderDB: () => mongoose.model('PlaceOrder').findOne(),
+  updateIndividualDB: (data) => mongoose.model('Individual').findOneAndUpdate({}, data, { new: true }),
+  updateBusinessDB: (data) => mongoose.model('Business').findOneAndUpdate({}, data, { new: true }),
+  updatePlaceOrderDB: (data) => mongoose.model('PlaceOrder').findOneAndUpdate({}, data, { new: true })
 };

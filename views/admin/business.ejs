@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Business</title>
+</head>
+<body>
+    <h1>Manage Business</h1>
+    <form action="/admin/business" method="POST">
+        <label for="mainTitlePart1">Main Title Part 1:</label>
+        <input type="text" id="mainTitlePart1" name="mainTitlePart1" value="<%= data ? data.mainTitlePart1 : '' %>"><br><br>
+        
+        <label for="mainTitlePart2">Main Title Part 2:</label>
+        <input type="text" id="mainTitlePart2" name="mainTitlePart2" value="<%= data ? data.mainTitlePart2 : '' %>"><br><br>
+        
+        <label for="subHeading">Sub Heading:</label>
+        <input type="text" id="subHeading" name="subHeading" value="<%= data ? data.subHeading : '' %>"><br><br>
+        
+        <h2>Cards</h2>
+        <% for(let i = 0; i < 3; i++) { %>
+            <h3>Card <%= i+1 %></h3>
+            <label for="card<%= i %>Title">Title:</label>
+            <input type="text" id="card<%= i %>Title" name="cards[<%= i %>][title]" value="<%= data && data.cards[i] ? data.cards[i].title : '' %>"><br>
+            
+            <label for="card<%= i %>Description">Description:</label>
+            <input type="text" id="card<%= i %>Description" name="cards[<%= i %>][description]" value="<%= data && data.cards[i] ? data.cards[i].description : '' %>"><br><br>
+        <% } %>
+
+        <h2>Left Section</h2>
+        <label for="leftSectionHeading">Heading:</label>
+        <input type="text" id="leftSectionHeading" name="leftSection[heading]" value="<%= data && data.leftSection ? data.leftSection.heading : '' %>"><br><br>
+
+        <h3>Checkbox Points</h3>
+        <% for(let i = 0; i < 3; i++) { %>
+            <h4>Checkbox Point <%= i+1 %></h4>
+            <label for="checkboxPoint<%= i %>Title">Title:</label>
+            <input type="text" id="checkboxPoint<%= i %>Title" name="leftSection[checkboxPoints][<%= i %>][title]" value="<%= data && data.leftSection && data.leftSection.checkboxPoints[i] ? data.leftSection.checkboxPoints[i].title : '' %>"><br>
+            
+            <label for="checkboxPoint<%= i %>Price">Price:</label>
+            <input type="number" id="checkboxPoint<%= i %>Price" name="leftSection[checkboxPoints][<%= i %>][price]" value="<%= data && data.leftSection && data.leftSection.checkboxPoints[i] ? data.leftSection.checkboxPoints[i].price : '' %>"><br>
+            
+            <label for="checkboxPoint<%= i %>ShowInPage">Show in Page:</label>
+            <input type="checkbox" id="checkboxPoint<%= i %>ShowInPage" name="leftSection[checkboxPoints][<%= i %>][showInPage]" <%= data && data.leftSection && data.leftSection.checkboxPoints[i] && data.leftSection.checkboxPoints[i].showInPage ? 'checked' : '' %>><br><br>
+        <% } %>
+
+        <h2>Right Section</h2>
+        <label for="rightSectionTitle">Title:</label>
+        <input type="text" id="rightSectionTitle" name="rightSection[title]" value="<%= data && data.rightSection ? data.rightSection.title : '' %>"><br>
+
+        <label for="rightSectionBasePrice">Base Price:</label>
+        <input type="number" id="rightSectionBasePrice" name="rightSection[basePrice]" value="<%= data && data.rightSection ? data.rightSection.basePrice : '' %>"><br><br>
+
+        <h3>All Plans Include</h3>
+        <% for(let i = 0; i < 3; i++) { %>
+            <label for="allPlansInclude<%= i %>">Feature <%= i+1 %>:</label>
+            <input type="text" id="allPlansInclude<%= i %>" name="rightSection[allPlansInclude][]" value="<%= data && data.rightSection && data.rightSection.allPlansInclude[i] ? data.rightSection.allPlansInclude[i] : '' %>"><br>
+        <% } %>
+
+        <br>
+        <input type="submit" value="Save">
+    </form>
+    <a href="/admin">Back to Dashboard</a>
+</body>
+</html>
